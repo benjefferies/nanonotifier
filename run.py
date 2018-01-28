@@ -1,6 +1,7 @@
 import sys
 
 import requests
+import time
 
 host = sys.argv[0]
 account = sys.argv[1]
@@ -16,3 +17,5 @@ while True:
     for tran in new_trans:
         if tran.type == 'receive':
             print(f'New transaction from {tran.account} for {tran.amount}')
+
+    time.sleep(5)
