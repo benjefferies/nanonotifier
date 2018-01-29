@@ -29,7 +29,7 @@ while True:
             account = tran['account']
             amount = float(tran['amount'])
             if amount != 0:
-                amount /= 1.0e-30
+                amount /= 1.0e+30
             total += amount
             message += f'New transaction from {account} for ' + "{:10.5f}\n".format(amount)
 
