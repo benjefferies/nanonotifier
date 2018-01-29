@@ -4,6 +4,7 @@ import requests
 import time
 import json
 
+
 host = sys.argv[1]
 account = sys.argv[2]
 data = {
@@ -26,14 +27,15 @@ while True:
     for tran in new_trans:
         if tran['type'] == 'receive':
             account = tran['account']
-            amount = int(tran['amount'])
+            amount = float(tran['amount'])
             if amount != 0:
-                amount = amount/1000000
+                amount /= 1.0e-30
             total += amount
-            message += f'New transaction from {account} for {amount}\n'
+            message += f'New transaction from {account} for ' + "{:10.5f}\n".format(amount)
 
     if total > 0:
-        print(f'Received {total} XRB')
+        subject = 'Received {:10.5f} XRB'.format(total)
+        print(subject)
         print(message)
     last_known_trans = trans_history
     time.sleep(5)
