@@ -6,18 +6,35 @@ import json
 
 host = sys.argv[1]
 account = sys.argv[2]
-trans = []
+data = {
+    'action': 'account_history',
+    'account': account,
+    'count': 10,
+}
+
+
+def get_trans_history():
+    return requests.post(f'http://{host}:7076', json.dumps(data)).json().get('history', [])
+
+
+last_known_trans = get_trans_history()
 while True:
-    data = {
-        'action': 'account_history',
-        'account': account,
-        'count': 10,
-    }
-    resp = requests.post(f'http://{host}:7076', json.dumps(data)).json()
-    new_trans = [x for x in resp['history'] if x not in trans]
+    trans_history = get_trans_history()
+    new_trans = [x for x in trans_history if x not in last_known_trans]
+    total = 0
+    message = ''
     for tran in new_trans:
         if tran['type'] == 'receive':
-            print('New transaction from {} for {}'.format(tran['account'], tran['amount']))
-    trans = resp.get('history', [])
+            account = tran['account']
+            amount = int(tran['amount'])
+            if amount != 0:
+                amount = amount/1000000
+            total += amount
+            message += f'New transaction from {account} for {amount}\n'
+
+    if total > 0:
+        print(f'Received {total} XRB')
+        print(message)
+    last_known_trans = trans_history
     time.sleep(5)
 
