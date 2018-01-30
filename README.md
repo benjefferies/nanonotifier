@@ -1,12 +1,17 @@
-# Raiblock payments
-A simple app to notify (print to console) of any payments incoming payments
+# RaiBlocks payment notifier
+A simple app to notify (print to console) of any incoming RaiBlocks payments
 
-## Raiblocks node
+## RaiBlocks node
 Setup raiblocks node by following https://1xrb.com/support-the-network/
 
-## Setup
+## Setup (Ubuntu Example - append sudo if not root)
 ```bash
-pipenv install
+apt update
+apt install python-pip unzip
+pip install pipenv
+wget https://github.com/raitheon/raiblockpayments/archive/master.zip
+unzip master.zip
+cd raiblockpayments-master/
 python run.py "[::1]" "xrb_youraddress"
 ```
 
