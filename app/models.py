@@ -1,8 +1,10 @@
+import os
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine('sqlite:///:memory:', echo=True)
+db_url = os.getenv('DATABASE_URL')
+engine = create_engine(db_url, echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
