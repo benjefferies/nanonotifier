@@ -3,7 +3,7 @@ import os
 from botocore.exceptions import ClientError
 
 
-source_email = os.getenv('SES_SOURCE_EMAIL', 'raiblockpayments@echosoft.uk')
+source_email = os.getenv('SES_SOURCE_EMAIL')
 AWS_REGION = os.getenv('AWS_REGION', 'us-west-2')
 
 # Create a new SES resource and specify a region.
