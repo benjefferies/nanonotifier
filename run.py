@@ -6,6 +6,7 @@ import requests
 import time
 import json
 
+from ses import send
 
 account = sys.argv[1]
 email_user = sys.argv[2]
@@ -24,12 +25,8 @@ def get_trans_history():
 
 def notify(total, message):
     subject = 'Received {:10.5f} XRB'.format(total)
-    if os.getenv('SMTP_ENABLED', False):
-        server = smtplib.SMTP(os.getenv('SMTP_HOST'), os.getenv('SMTP_PORT'))
-        server.login(email_user, email_password)
-        domain = email_user.split("@")[1]
-        email = f'Subject: {subject}\n\n{message}'
-        server.sendmail(f'raiblockpayments@{domain}', email_user, email)
+    if os.getenv('EMAIL_ENABLED', False):
+        send(email_user, subject, message)
     else:
         print(subject)
         print(message)
