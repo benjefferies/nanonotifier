@@ -10,7 +10,6 @@ from ses import send
 
 account = sys.argv[1]
 email_user = sys.argv[2]
-email_password = sys.argv[3]
 data = {
     'action': 'account_history',
     'account': account,
