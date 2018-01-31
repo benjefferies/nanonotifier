@@ -42,7 +42,7 @@ def check_account(account, last_known_trans, emails):
             if amount != 0:
                 amount /= 1.0e+30
             total += amount
-            message += f'New transaction from {from_account} for ' + "{:10.5f}\n".format(amount)
+            message += f'New transaction from {from_account} for ' + "{:10.5f} XRB\n".format(amount)
     if total > 0:
         notify(emails, total, message)
     return trans_history
