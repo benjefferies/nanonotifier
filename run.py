@@ -1,5 +1,8 @@
 import logging
+import time
 from collections import defaultdict
+
+import os
 
 from app.models import Notification, session
 from app.nano import get_trans_history, check_account
@@ -50,3 +53,4 @@ if __name__ == '__main__':
             account_last_known_trans = last_known_trans[account]
             emails = notificationToEmails[account]
             last_known_trans[account] = check_account(account, account_last_known_trans, emails)
+        time.sleep(int(os.getenv('TIMEOUT', 5)))

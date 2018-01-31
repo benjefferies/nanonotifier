@@ -1,12 +1,10 @@
 import json
 import logging
 import os
-import time
 
 import requests
 
 from app.ses import send
-
 
 logger = logging.getLogger(__name__)
 
@@ -47,5 +45,4 @@ def check_account(account, last_known_trans, emails):
             message += f'New transaction from {from_account} for ' + "{:10.5f}\n".format(amount)
     if total > 0:
         notify(emails, total, message)
-    time.sleep(5)
     return trans_history
