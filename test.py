@@ -1,17 +1,17 @@
 import logging
 
-from app.models import Notification, session
+from app.models import Subscription, session
 
 logger = logging.getLogger(__name__)
 
-logger.info('Inserting notifications')
-notification = Notification()
-notification.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
-notification.email = 'benjjefferies@gmail.com'
-session.add(notification)
+logger.info('Inserting subscription')
+subscription = Subscription()
+subscription.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
+subscription.email = 'benjjefferies@gmail.com'
+session.add(subscription)
 
-notification = Notification()
-notification.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
-notification.email = 'benjefferies@echosoft.uk'
-session.add(notification)
+subscription = Subscription()
+subscription.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
+subscription.email = 'benjefferies@echosoft.uk'
+session.add(subscription)
 session.commit()
