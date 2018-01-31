@@ -1,7 +1,7 @@
-# Raiblock payments
-A simple app to notify (print to console) of any payments incoming payments
+# RaiBlocks payment notifier
+A simple app to notify (print to console) of any incoming RaiBlocks payments
 
-## Raiblocks node
+## RaiBlocks node
 Setup raiblocks node by following https://1xrb.com/support-the-network/
 
 ## Setup for Mac
