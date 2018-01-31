@@ -9,7 +9,8 @@ import json
 from ses import send
 
 account = sys.argv[1]
-email_user = sys.argv[2]
+if len(sys.argv) == 3:
+    email_user = sys.argv[2]
 data = {
     'action': 'account_history',
     'account': account,
