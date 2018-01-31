@@ -24,7 +24,7 @@ def get_trans_history():
 
 def notify(total, message):
     subject = 'Received {:10.5f} XRB'.format(total)
-    if os.getenv('EMAIL_ENABLED', False):
+    if os.getenv('EMAIL_ENABLED', 'False') == 'True':
         send(email_user, subject, message)
     else:
         print(subject)
