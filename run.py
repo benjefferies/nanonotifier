@@ -10,22 +10,7 @@ from app.nano import get_trans_history, check_account
 logger = logging.getLogger(__name__)
 
 
-def notifications():
-    logger.info('Inserting notifications')
-    notification = Notification()
-    notification.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
-    notification.email = 'benjjefferies@gmail.com'
-    session.add(notification)
-
-    notification = Notification()
-    notification.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
-    notification.email = 'benjefferies@echosoft.uk'
-    session.add(notification)
-    session.commit()
-
-
 if __name__ == '__main__':
-    notifications()
     notificationToEmails = defaultdict(list)
     logger.info('Loading notifications')
     for notification in session.query(Notification):
