@@ -25,6 +25,12 @@ def notifications():
     session.add(notification)
     session.commit()
 
+    notification = Notification()
+    notification.account = 'xrb_3xjnmhz5oc1p6oabo15a33nuu86uwwx87f3qot36eax73ous6ez9ytdoyrcr'
+    notification.email = 'ljefferies98@gmail.com'
+    session.add(notification)
+    session.commit()
+
 
 if __name__ == '__main__':
     notifications()
