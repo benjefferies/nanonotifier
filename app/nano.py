@@ -1,11 +1,14 @@
 import json
+import logging
 import os
-import sys
 import time
 
 import requests
 
 from app.ses import send
+
+
+logger = logging.getLogger(__name__)
 
 data = {
     'action': 'account_history',
@@ -25,8 +28,8 @@ def notify(emails, total, message):
         for email in emails:
             send(email, subject, message)
     else:
-        print(subject)
-        print(message)
+        logger.info(subject)
+        logger.info(message)
 
 
 def check_account(account, last_known_trans, emails):
