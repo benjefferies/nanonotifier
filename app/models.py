@@ -1,4 +1,6 @@
 import os
+import uuid
+
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -12,8 +14,14 @@ session = Session()
 
 class Subscription(Base):
     __tablename__ = 'subscription'
-    email = Column(String, primary_key=True)
+    id = Column(String, primary_key=True, default=uuid.uuid4)
+    email = Column(String)
     account = Column(String)
+
+    def __init__(self, email, account):
+        self.id = str(uuid.uuid4())
+        self.email = email
+        self.account = account
 
     def __repr__(self):
         return f"<Subscription(email='{self.email}', account='{self.account}')>"
