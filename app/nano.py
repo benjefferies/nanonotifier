@@ -32,7 +32,7 @@ def notify(emails, total, message):
 
 def check_account(account, last_known_trans, emails):
     trans_history = get_trans_history(account)
-    new_trans = [x for x in trans_history if x not in last_known_trans]
+    new_trans = [] if not last_known_trans else [x for x in trans_history if x not in last_known_trans]
     total = 0
     message = ''
     for tran in new_trans:
