@@ -19,3 +19,4 @@ sqlalchemy = "*"
 
 [dev-packages]
 
+requests-mock = "*"

@@ -9,14 +9,13 @@ from app.ses import send
 logger = logging.getLogger(__name__)
 
 data = {
-    'action': 'account_history',
-    'count': 10,
+    'action': 'account_history'
 }
 host = os.getenv('RAIBLOCKS_HOST', '[::1]')
 
 
-def get_trans_history(account):
-    req = dict(account=account, **data)
+def get_trans_history(account, count):
+    req = dict(account=account, count=count, **data)
     return requests.post(f'http://{host}:7076', json.dumps(req)).json().get('history', [])
 
 
@@ -30,9 +29,27 @@ def notify(emails, total, message):
         logger.info(message)
 
 
+def find_newest_trans(account, last_known_trans, count=10):
+    trans_history = get_trans_history(account, count)
+    new_trans = []
+    for tran in trans_history:
+        if tran['hash'] != last_known_trans:
+            new_trans.append(tran)
+        else:
+            return new_trans
+    # Recursively search until all newest_transactions found
+    return find_newest_trans(account, last_known_trans, count=count+10)
+
+
 def check_account(account, last_known_trans, emails):
-    trans_history = get_trans_history(account)
-    new_trans = [] if not last_known_trans else [x for x in trans_history if x not in last_known_trans]
+    new_trans = []
+    # Get last transaction if none
+    if not last_known_trans:
+        history = get_trans_history(account, 1)
+        last_known_trans = history[0].get('hash') if history else None
+
+    if last_known_trans:
+        new_trans = find_newest_trans(account, last_known_trans)
     total = 0
     message = ''
     for tran in new_trans:
@@ -45,4 +62,4 @@ def check_account(account, last_known_trans, emails):
             message += f'New transaction from {from_account} for ' + "{:10.5f} XRB\n".format(amount)
     if total > 0:
         notify(emails, total, message)
-    return trans_history
+    return last_known_trans if not new_trans else new_trans[0].get('hash')

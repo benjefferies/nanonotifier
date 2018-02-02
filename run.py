@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 if __name__ == '__main__':
-    last_known_trans = defaultdict(list)
+    last_known_trans = defaultdict(str)
     while True:
         subToEmails = defaultdict(list)
         logger.info('Loading email subscriptions')
