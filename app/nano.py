@@ -82,11 +82,12 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
     logger.info(f'Finding pending transactions for {account}')
     # Get last transaction if none
     pendings = get_pendings(account)
-    if not last_known_pendings:
+    if last_known_pendings:
         logger.debug(f'No known pending transactions for {account}')
-        return pendings
+        new_pendings = find_new_pending_trans(pendings, last_known_pendings)
+    else:
+        new_pendings = pendings
 
-    new_pendings = find_new_pending_trans(pendings, last_known_pendings)
     logger.debug(f'No known pending transactions for {account}')
     message, total = build_message_and_total_for_pending_transactions(new_pendings)
     if message:

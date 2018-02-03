@@ -106,7 +106,11 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(last_known_pending))
 
         # When
-        newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
+        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
+
+        # Then
+            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB', 'Pending transaction from nano_account for 10000.00000 XRB\n')
 
         # Then
         assert newest_transactions == last_known_pending['blocks']
