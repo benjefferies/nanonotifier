@@ -1,12 +1,12 @@
-import os
 import uuid
 
 from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-db_url = os.getenv('DATABASE_URL')
-engine = create_engine(db_url, echo=True)
+from app.config import DB_URL
+
+engine = create_engine(DB_URL, echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()

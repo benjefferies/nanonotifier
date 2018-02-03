@@ -1,13 +1,11 @@
 import logging
-import os
 
 import boto3
 from botocore.exceptions import ClientError
 
-source_email = os.getenv('SES_SOURCE_EMAIL')
-AWS_REGION = os.getenv('AWS_REGION', 'us-west-2')
-
 # Create a new SES resource and specify a region.
+from app.config import AWS_REGION
+
 client = boto3.client('ses', region_name=AWS_REGION)
 
 
