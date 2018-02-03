@@ -14,7 +14,9 @@ python_version = "3.6.1"
 
 requests = "*"
 "boto3" = "*"
+sqlalchemy = "*"
 
 
 [dev-packages]
 
+requests-mock = "*"

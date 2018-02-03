@@ -6,13 +6,14 @@ Setup raiblocks node by following https://1xrb.com/support-the-network/
 
 ## Setup for Mac
 ```bash
-sudo easy_install pip
 curl -L https://raw.githubusercontent.com/pyenv/pyenv-installer/master/bin/pyenv-installer | bash
+sudo easy_install pip
+pip install pipenv
 wget https://github.com/benjefferies/raiblockpayments/archive/master.zip
 unzip master.zip
 cd raiblockpayments-master/
 pipenv install
-pipenv run python run.py "[::1]" "xrb_youraddress"
+pipenv run python run.py
 ```
 
 ## Setup (Ubuntu Example - append sudo if not root)
@@ -25,7 +26,7 @@ wget https://github.com/benjefferies/raiblockpayments/archive/master.zip
 unzip master.zip
 cd raiblockpayments-master/
 pipenv install
-pipenv run python run.py "xrb_youraddress"
+pipenv run python run.py
 ```
 
 ## Sending email notifications
@@ -44,15 +45,5 @@ export AWS_SECRET_ACCESS_KEY=verysecret # YOUR SECRET_ACCESS
 ```
 4.
 ```bash
-pipenv run python run.py "xrb_youraddress" mynotification@emailaddress.com
-```
-
-The output looks something like
-
-```
-New transaction from xrb_youraddress for 400000000000000000000000000
-New transaction from xrb_youraddress for 200000000000000000000000000
-New transaction from xrb_youraddress for 300000000000000000000000000
-New transaction from xrb_youraddress for 1000000000000000000000000000
-New transaction from xrb_youraddress for 100000000000000000000000000
+pipenv run python run.py
 ```
