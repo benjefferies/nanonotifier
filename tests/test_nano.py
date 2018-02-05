@@ -49,7 +49,9 @@ class TestNano(unittest.TestCase):
             latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'], ['test@example.com'])
 
         # Then
-            mock_send.assert_called_once_with('test@example.com', 'Received 0.00990 XRB', 'New transaction from nano_account for 0.00990 XRB\n')
+            mock_send.assert_called_once_with('test@example.com', 'Received 0.00990 XRB',
+                                              'New transaction from nano_account for 0.00990 XRB\n',
+                                              'received@nanonotify.co')
         assert newest_transaction['hash'] == latest_transaction
 
     @requests_mock.mock()
@@ -89,7 +91,8 @@ class TestNano(unittest.TestCase):
             newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'], ['test@example.com'])
 
         # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 20000.00000 XRB', 'Pending transaction from nano_account for 20000.00000 XRB\n')
+            mock_send.assert_called_once_with('test@example.com', 'Pending 20000.00000 XRB',
+                                              'Pending transaction from nano_account for 20000.00000 XRB\n', 'pending@nanonotify.co')
         assert newest_transactions == new_pendings['blocks']
 
     @requests_mock.mock()
@@ -110,7 +113,8 @@ class TestNano(unittest.TestCase):
             newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
 
         # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB', 'Pending transaction from nano_account for 10000.00000 XRB\n')
+            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB',
+                                              'Pending transaction from nano_account for 10000.00000 XRB\n', 'pending@nanonotify.co')
 
         # Then
         assert newest_transactions == last_known_pending['blocks']

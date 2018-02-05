@@ -28,12 +28,12 @@ def get_pendings(account):
     return pending['blocks'] if pending.get('blocks') else {}
 
 
-def notify(emails, message, subject):
+def notify(emails, message, subject, from_email):
     if EMAIL_ENABLED:
         logger.debug(f'Sending emails to {str(emails)}')
         logger.debug(f'{subject}\n\n{message}')
         for email in emails:
-            send(email, subject, message)
+            send(email, subject, message, from_email)
     else:
         logger.info(subject)
         logger.info(message)
@@ -74,7 +74,7 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
     message, total = build_message_and_total_for_new_transactions(new_trans)
     if message:
         subject = 'Received {:1.5f} XRB'.format(total)
-        notify(emails, message, subject)
+        notify(emails, message, subject, from_email='received@nanonotify.co')
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
@@ -92,7 +92,7 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
     message, total = build_message_and_total_for_pending_transactions(new_pendings)
     if message:
         subject = 'Pending {:1.5f} XRB'.format(total)
-        notify(emails, message, subject)
+        notify(emails, message, subject, from_email='pending@nanonotify.co')
     return pendings
 
 

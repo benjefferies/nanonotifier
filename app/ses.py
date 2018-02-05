@@ -12,7 +12,7 @@ client = boto3.client('ses', region_name=AWS_REGION)
 logger = logging.getLogger(__name__)
 
 
-def send(email_user, subject, message):
+def send(email_user, subject, message, from_email):
     logger.info(f'Sending email to {email_user} with subject {subject}')
     # Try to send the email.
     try:
@@ -35,7 +35,7 @@ def send(email_user, subject, message):
                     'Data': subject,
                 },
             },
-            Source='raiblockpayments@echosoft.uk',
+            Source=from_email,
         )
     # Display an error if something goes wrong.
     except ClientError as e:
