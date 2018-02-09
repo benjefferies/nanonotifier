@@ -4,7 +4,7 @@ from collections import defaultdict
 
 from app.config import TIMEOUT
 from app.models import Subscription, session
-from app.nano import check_account_for_new_transactions, check_account_for_new_pending
+from app.nano import check_account_for_new_transactions, check_account_for_new_pending, get_pendings
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +19,7 @@ if __name__ == '__main__':
         # Map account to emails
         for subscription in session.query(Subscription):
             subToEmails[subscription.account].append(subscription.email)
+            last_known_pending[account] = get_pendings(account)
 
         for account in subToEmails.keys():
             logger.info(f'Checking for new transactions for {account}')
