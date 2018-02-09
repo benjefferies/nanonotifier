@@ -12,6 +12,10 @@ logger = logging.getLogger(__name__)
 if __name__ == '__main__':
     last_known_trans = defaultdict(str)
     last_known_pending = defaultdict(dict)
+
+    # Initialise pendings before notifying
+    for subscription in session.query(Subscription):
+        last_known_pending[subscription.account] = get_pendings(subscription.account)
     while True:
         subToEmails = defaultdict(list)
         logger.info('Loading email subscriptions')
@@ -19,7 +23,6 @@ if __name__ == '__main__':
         # Map account to emails
         for subscription in session.query(Subscription):
             subToEmails[subscription.account].append(subscription.email)
-            last_known_pending[subscription.account] = get_pendings(subscription.account)
 
         for account in subToEmails.keys():
             logger.info(f'Checking for new transactions for {account}')
