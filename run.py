@@ -19,7 +19,7 @@ if __name__ == '__main__':
         # Map account to emails
         for subscription in session.query(Subscription):
             subToEmails[subscription.account].append(subscription.email)
-            last_known_pending[account] = get_pendings(account)
+            last_known_pending[subscription.account] = get_pendings(subscription.account)
 
         for account in subToEmails.keys():
             logger.info(f'Checking for new transactions for {account}')
