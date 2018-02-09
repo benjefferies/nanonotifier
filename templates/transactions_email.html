@@ -1,0 +1,15 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<h1>Transactions for {{account}}</h1>
+<table>
+    {% for transaction in transactions %}
+    <tr>
+        <td>New transaction from {{transaction.from_account}} for {{transaction.amount|format_nano}} XRB</td>
+    </tr>
+    {% endfor %}
+</table>
+</body>
+</html>

@@ -25,7 +25,7 @@ def send(email_user, subject, message, from_email):
             },
             Message={
                 'Body': {
-                    'Text': {
+                    'Html': {
                         'Charset': "UTF-8",
                         'Data': message,
                     },
