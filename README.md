@@ -36,7 +36,6 @@ Emails are sent via [AWS SES](https://aws.amazon.com/ses/). You get a 62,000 ema
 ```
 EMAIL_ENABLED=True
 AWS_REGION=us-west-2
-SES_SOURCE_EMAIL=myemail@mydomain.com
 ```
 3. Set the AWS credential environmental variables
 ```bash

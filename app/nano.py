@@ -74,7 +74,7 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
     new_trans = find_newest_trans(account, last_known_trans)
     logger.debug(f'Found new transactions {json.dumps(new_trans, indent=4, sort_keys=True)}')
     message, total = build_message_and_total_for_new_transactions(account, new_trans)
-    if message:
+    if total:
         subject = 'Received {total:1.5f} XRB from {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='received@nanotify.co')
     return last_known_trans if not new_trans else new_trans[0].get('hash')
@@ -101,29 +101,34 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
 def build_message_and_total_for_new_transactions(account, new_trans):
     account_transactions = []
     total = 0
+    message = None
     for tran in new_trans:
         if tran['type'] == 'receive':
             from_account = tran['account']
             amount = float(tran['amount'])
+            hash = tran['hash']
             if amount != 0:
                 amount /= 1.0e+30
             total += amount
-            account_transactions.append({'from_account': from_account, 'amount': amount})
-    message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account})
+            account_transactions.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+    if total:
+        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account})
     return message, total
 
 
 def build_message_and_total_for_pending_transactions(account, pendings):
     account_pendings = []
     total = 0
-    for tran in pendings.values():
+    message = None
+    for hash, tran in pendings.items():
         from_account = tran['source']
         amount = float(tran['amount'])
         if amount != 0:
             amount /= 1.0e+30
         total += amount
-        account_pendings.append({'from_account': from_account, 'amount': amount})
-    message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account})
+        account_pendings.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+    if total:
+        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account})
     return message, total
 
 

@@ -101,7 +101,7 @@
                 <div class="content" style="box-sizing: border-box; display: block; Margin: 0 auto; max-width: 580px; padding: 10px;">
 
                     <!-- START CENTERED WHITE CONTAINER -->
-                    <span class="preheader" style="color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;">This is preheader text. Some clients will show this text as a preview.</span>
+                    <span class="preheader" style="color: transparent; display: none; height: 0; max-height: 0; max-width: 0; opacity: 0; overflow: hidden; mso-hide: all; visibility: hidden; width: 0;">Received pending transactions</span>
                     <table class="main" style="border-collapse: separate; mso-table-lspace: 0pt; mso-table-rspace: 0pt; width: 100%; background: #ffffff; border-radius: 3px;">
 
                         <!-- START MAIN CONTENT AREA -->
@@ -115,8 +115,8 @@
                                             </p>
                                             {% for transaction in transactions %}
                                             <tr>
-                                                <td>Pending from {{transaction.from_account}} for {{transaction.amount|format_nano}}
-                                                    XRB</td>
+                                                <td><a href="https://nano.org/en/explore/account/{{transaction.from_account}}">{{transaction.from_account}}</a></td>
+                                                <td><a href="https://nano.org/en/explore/block/{{transaction.hash}}">{{transaction.amount|format_nano}} XRB</a></td>
                                             </tr>
                                             {% endfor %}
                                         </td>
