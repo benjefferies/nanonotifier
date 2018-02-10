@@ -1,6 +1,8 @@
 import json
 import logging
+import os
 
+import jinja2
 import requests
 
 from app.config import HOST, EMAIL_ENABLED
@@ -71,10 +73,10 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
 
     new_trans = find_newest_trans(account, last_known_trans)
     logger.debug(f'Found new transactions {json.dumps(new_trans, indent=4, sort_keys=True)}')
-    message, total = build_message_and_total_for_new_transactions(new_trans)
-    if message:
-        subject = 'Received {:1.5f} XRB'.format(total)
-        notify(emails, message, subject, from_email='received@nanonotify.co')
+    message, total = build_message_and_total_for_new_transactions(account, new_trans)
+    if total:
+        subject = 'Received {total:1.5f} XRB from {account}'.format(total=total, account=account)
+        notify(emails, message, subject, from_email='received@nanotify.co')
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
@@ -82,42 +84,60 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
     logger.info(f'Finding pending transactions for {account}')
     # Get last transaction if none
     pendings = get_pendings(account)
-    if last_known_pendings:
+    if any(last_known_pendings):
         logger.debug(f'No known pending transactions for {account}')
         new_pendings = find_new_pending_trans(pendings, last_known_pendings)
     else:
         new_pendings = pendings
 
     logger.debug(f'No known pending transactions for {account}')
-    message, total = build_message_and_total_for_pending_transactions(new_pendings)
-    if message:
-        subject = 'Pending {:1.5f} XRB'.format(total)
-        notify(emails, message, subject, from_email='pending@nanonotify.co')
+    message, total = build_message_and_total_for_pending_transactions(account, new_pendings)
+    if total:
+        subject = 'Pending {total:1.5f} XRB from {account}'.format(total=total, account=account)
+        notify(emails, message, subject, from_email='pending@nanotify.co')
     return pendings
 
 
-def build_message_and_total_for_new_transactions(new_trans):
-    message = ''
+def build_message_and_total_for_new_transactions(account, new_trans):
+    account_transactions = []
     total = 0
+    message = None
     for tran in new_trans:
         if tran['type'] == 'receive':
             from_account = tran['account']
             amount = float(tran['amount'])
+            hash = tran['hash']
             if amount != 0:
                 amount /= 1.0e+30
             total += amount
-            message += 'New transaction from {from_account} for {amount:1.5f} XRB\n'.format(from_account=from_account, amount=amount)
+            account_transactions.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+    if total:
+        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account})
     return message, total
 
 
-def build_message_and_total_for_pending_transactions(pendings):
-    message = ''
+def build_message_and_total_for_pending_transactions(account, pendings):
+    account_pendings = []
     total = 0
-    for tran in pendings.values():
+    message = None
+    for hash, tran in pendings.items():
         from_account = tran['source']
         amount = float(tran['amount'])
         if amount != 0:
             amount /= 1.0e+30
         total += amount
-        message += 'Pending transaction from {from_account} for {amount:1.5f} XRB\n'.format(from_account=from_account, amount=amount)
+        account_pendings.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+    if total:
+        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account})
     return message, total
+
+
+def format_nano(nano):
+    return '{nano:1.5f}'.format(nano=nano)
+
+
+def render(tpl_path, context):
+    path, filename = os.path.split(tpl_path)
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader(path or './'))
+    env.filters['format_nano'] = format_nano
+    return env.get_template(filename).render(context)

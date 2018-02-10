@@ -15,6 +15,7 @@ python_version = "3.6.1"
 requests = "*"
 "boto3" = "*"
 sqlalchemy = "*"
+"jinja2" = "*"
 
 
 [dev-packages]
