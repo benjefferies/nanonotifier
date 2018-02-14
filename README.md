@@ -1,8 +1,9 @@
-# RaiBlocks payment notifier
-A simple app to notify (print to console) of any incoming RaiBlocks payments
+[![Build Status](https://travis-ci.org/benjefferies/nanonotifier.svg?branch=master)](https://travis-ci.org/benjefferies/nanonotifier)
+ Nano payment notifier
+A simple app to notify (print to console) of any incoming Nano payments
 
-## RaiBlocks node
-Setup raiblocks node by following https://1xrb.com/support-the-network/
+## Nano node
+Setup Nano node by following https://1xrb.com/support-the-network/
 
 ## Setup for Mac
 ```bash
