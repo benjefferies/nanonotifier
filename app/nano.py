@@ -129,7 +129,7 @@ def build_message_and_total_for_pending_transactions(account, pendings):
         total += amount
         account_pendings[from_account].append({'amount': amount, 'hash': hash})
     if total:
-        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account})
+        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account, 'total': total})
     return message, total
 
 
