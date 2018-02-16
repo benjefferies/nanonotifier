@@ -436,7 +436,7 @@
                                                 <p style="margin: 0;font-size: 12px;line-height: 14px">We've noticed
                                                     your account <a
                                                             href="https://nano.org/en/explore/account/{{ account }}">{{ account }}</a>
-                                                    has {{ transactions | length }} {{ 'pending transaction' if transactions | length < 2 else 'pending transactions' }}.
+                                                    has {{ number_of_transactions }} {{ 'pending transaction' if number_of_transactions < 2 else 'pending transactions' }}.
                                                 </p>
                                                 <p style="margin: 0;font-size: 12px;line-height: 14px"><br
                                                         data-mce-bogus="1"></p>
@@ -445,9 +445,10 @@
                                                         Sender</p>
                                                     <a href="https://nano.org/en/explore/account/{{ account }}">{{ account }}</a>
                                                     <ul>
+                                                        <p style="color:#aaaaaa;text-decoration: underline; font-weight: bold">
+                                                            Amount
+                                                        <p/>
                                                         {% for transaction in transactions[account] %}
-                                                            <p style="color:#aaaaaa;text-decoration: underline; font-weight: bold">
-                                                                Amount<p/>
                                                             <li>
                                                                 <a href="https://nano.org/en/explore/block/{{ transaction.hash }}">{{ transaction.amount|format_nano }}</a>XRB
                                                             </li>
