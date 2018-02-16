@@ -4,9 +4,9 @@ from sqlalchemy import Column, String, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from app.config import DB_URL
+from app.config import DATABASE_URL
 
-engine = create_engine(DB_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=True)
 Base = declarative_base()
 Session = sessionmaker(bind=engine)
 session = Session()
