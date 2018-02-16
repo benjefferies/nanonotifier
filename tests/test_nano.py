@@ -51,7 +51,7 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Received 0.00990 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '0.00990 XRB']),
+                                              AllStringsIn(['nano_account', '0.00990</a>XRB']),
                                               'received@nanotify.co')
         assert newest_transaction['hash'] == latest_transaction
 
@@ -71,7 +71,7 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Received 0.06422 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '0.00990 XRB', '0.05432 XRB']),
+                                              AllStringsIn(['nano_account', '0.00990</a>XRB', '0.05432</a>XRB']),
                                               'received@nanotify.co')
 
         newest_transaction = ten_transactions['history'].pop(0)
@@ -116,7 +116,7 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Pending 20000.00000 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '20000.00000 XRB']),
+                                              AllStringsIn(['nano_account', '20000.00000</a>XRB']),
                                               'pending@nanotify.co')
         assert newest_transactions == new_pendings['blocks']
 
@@ -149,7 +149,7 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Pending 50000.00000 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '20000.00000 XRB', '30000.00000 XRB']),
+                                              AllStringsIn(['nano_account', '20000.00000</a>XRB', '30000.00000</a>XRB']),
                                               'pending@nanotify.co')
         assert newest_transactions == new_pendings['blocks']
 
@@ -172,7 +172,7 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '10000.00000 XRB']),
+                                              AllStringsIn(['nano_account', '10000.00000</a>XRB']),
                                               'pending@nanotify.co')
 
         # Then

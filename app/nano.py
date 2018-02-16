@@ -4,6 +4,7 @@ import os
 
 import jinja2
 import requests
+from collections import defaultdict
 
 from app.config import HOST, EMAIL_ENABLED
 from app.ses import send
@@ -99,8 +100,9 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
 
 
 def build_message_and_total_for_new_transactions(account, new_trans):
-    account_transactions = []
+    account_transactions = defaultdict(list)
     total = 0
+    number_of_transactions = 0
     message = None
     for tran in new_trans:
         if tran['type'] == 'receive':
@@ -110,15 +112,17 @@ def build_message_and_total_for_new_transactions(account, new_trans):
             if amount != 0:
                 amount /= 1.0e+30
             total += amount
-            account_transactions.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+            number_of_transactions += 1
+            account_transactions[from_account].append({'amount': amount, 'hash': hash})
     if total:
-        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account})
+        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account, 'total': total, 'number_of_transactions': number_of_transactions})
     return message, total
 
 
 def build_message_and_total_for_pending_transactions(account, pendings):
-    account_pendings = []
+    account_pendings = defaultdict(list)
     total = 0
+    number_of_transactions = 0
     message = None
     for hash, tran in pendings.items():
         from_account = tran['source']
@@ -126,9 +130,10 @@ def build_message_and_total_for_pending_transactions(account, pendings):
         if amount != 0:
             amount /= 1.0e+30
         total += amount
-        account_pendings.append({'from_account': from_account, 'amount': amount, 'hash': hash})
+        number_of_transactions += 1
+        account_pendings[from_account].append({'amount': amount, 'hash': hash})
     if total:
-        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account})
+        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account, 'total': total, 'number_of_transactions': number_of_transactions})
     return message, total
 
 
