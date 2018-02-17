@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import requests_mock
+from requests import ConnectTimeout
 
 from app.nano import find_newest_trans, check_account_for_new_pending, check_account_for_new_transactions
 
@@ -78,7 +79,43 @@ class TestNano(unittest.TestCase):
         assert newest_transaction['hash'] == latest_transaction
 
     @requests_mock.mock()
-    def test_find_new_transactions_no_latest_known(self, mock_request):
+    def test_keep_last_known_transaction_when_failed_to_get_second_page_of_history(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        ten_transactions['history'].pop(1)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(ten_transactions))
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(20), exc=ConnectTimeout)
+
+        # When
+        with patch('app.nano.send'), patch('app.nano.EMAIL_ENABLED', True):
+            latest_transaction = check_account_for_new_transactions('nano_account', 'cant_get_to_this_id',
+                                                                    ['test@example.com'])
+
+        assert 'cant_get_to_this_id' == latest_transaction
+
+    @requests_mock.mock()
+    def test_dont_send_email_when_failed_to_get_second_page_of_history(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        ten_transactions['history'].pop(1)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10),
+                          text=json.dumps(ten_transactions))
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(20), exc=ConnectTimeout)
+
+        # When
+        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            check_account_for_new_transactions('nano_account', 'cant_get_to_this_id',
+                                                                    ['test@example.com'])
+
+            # Then
+            mock_send.assert_not_called()
+
+    @requests_mock.mock()
+    def test_find_new_transactions_when_no_latest_known(self, mock_request):
         # Given
         with open('tests/11_transactions.json') as file:
             eleven_transactions = json.load(file)
@@ -90,6 +127,37 @@ class TestNano(unittest.TestCase):
 
         # Then
         assert newest_transaction['hash'] == latest_transaction
+
+    @requests_mock.mock()
+    def test_find_new_transactions_when_raises_request_error_on_first(self, mock_request):
+        # Given
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), exc=ConnectTimeout)
+
+        # When
+        latest_transaction = check_account_for_new_transactions('nano_account', '', ['test@example.com'])
+
+        # Then
+        assert latest_transaction is None
+
+    @requests_mock.mock()
+    def test_find_no_new_transactions_when_error_raised(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        last_known_transaction = ten_transactions['history'].pop(1)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), exc=ConnectTimeout)
+
+        # When
+        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
+                                                                    ['test@example.com'])
+
+            # Then
+            mock_send.assert_not_called()
+        assert last_known_transaction['hash'] == latest_transaction
+
+
 
     @requests_mock.mock()
     def test_find_new_pending_transaction(self, mock_request):
@@ -149,7 +217,8 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_called_once_with('test@example.com', 'Pending 50000.00000 XRB from nano_account',
-                                              AllStringsIn(['nano_account', '20000.00000</a>XRB', '30000.00000</a>XRB']),
+                                              AllStringsIn(
+                                                  ['nano_account', '20000.00000</a>XRB', '30000.00000</a>XRB']),
                                               'pending@nanotify.co')
         assert newest_transactions == new_pendings['blocks']
 
@@ -179,7 +248,7 @@ class TestNano(unittest.TestCase):
         assert newest_transactions == last_known_pending['blocks']
 
     @requests_mock.mock()
-    def test_email_not_send_when_none_pending(self, mock_request):
+    def test_email_not_sent_when_none_pending(self, mock_request):
         # Given
         last_known_pending = {
             "blocks": {
@@ -198,6 +267,47 @@ class TestNano(unittest.TestCase):
 
             # Then
             mock_send.assert_not_called()
+        assert newest_transactions == last_known_pending['blocks']
+
+    @requests_mock.mock()
+    def test_pending_email_not_sent_when_requests_fails(self, mock_request):
+        # Given
+        last_known_pending = {
+            "blocks": {
+                "pending_1": {
+                    "amount": "10000000000000000000000000000000000",
+                    "source": "nano_account"
+                }
+            }
+        }
+        mock_request.post('http://[::1]:7076', additional_matcher=match_pending, exc=ConnectTimeout)
+
+        # When
+        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
+                                                                ['test@example.com'])
+
+            # Then
+            mock_send.assert_not_called()
+
+    @requests_mock.mock()
+    def test_pending_block_is_same_when_requests_fails(self, mock_request):
+        # Given
+        last_known_pending = {
+            "blocks": {
+                "pending_1": {
+                    "amount": "10000000000000000000000000000000000",
+                    "source": "nano_account"
+                }
+            }
+        }
+        mock_request.post('http://[::1]:7076', additional_matcher=match_pending, exc=ConnectTimeout)
+
+        # When
+        with patch('app.nano.send'), patch('app.nano.EMAIL_ENABLED', True):
+            newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
+                                                                ['test@example.com'])
+
         assert newest_transactions == last_known_pending['blocks']
 
 

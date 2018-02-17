@@ -6,6 +6,8 @@ import jinja2
 import requests
 from collections import defaultdict
 
+from requests import RequestException
+
 from app.config import HOST, EMAIL_ENABLED
 from app.ses import send
 
@@ -22,13 +24,21 @@ pending_data = {
 
 def get_trans_history(account, count):
     req = dict(account=account, count=count, **history_data)
-    return requests.post(f'http://{HOST}:7076', json.dumps(req)).json().get('history', [])
+    try:
+        return requests.post(f'http://{HOST}:7076', json.dumps(req)).json().get('history', [])
+    except RequestException as e:
+        logger.exception('Failed to get transaction history: ', str(e))
+        return []
 
 
-def get_pendings(account):
+def get_pendings(account, last_known_pendings):
     req = dict(account=account, **pending_data)
-    pending = requests.post(f'http://{HOST}:7076', json.dumps(req)).json()
-    return pending['blocks'] if pending.get('blocks') else {}
+    try:
+        pending = requests.post(f'http://{HOST}:7076', json.dumps(req)).json()
+        return pending['blocks'] if pending.get('blocks') else {}
+    except RequestException as e:
+        logger.exception('Failed to get transaction history: ', str(e))
+        return last_known_pendings
 
 
 def notify(emails, message, subject, from_email):
@@ -54,6 +64,8 @@ def find_new_pending_trans(all_pending, last_known_pending):
 
 def find_newest_trans(account, last_known_trans, count=10):
     trans_history = get_trans_history(account, count)
+    if not trans_history:
+        return trans_history
     new_trans = []
     for tran in trans_history:
         if tran['hash'] != last_known_trans:
@@ -84,7 +96,7 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
 def check_account_for_new_pending(account, last_known_pendings, emails):
     logger.info(f'Finding pending transactions for {account}')
     # Get last transaction if none
-    pendings = get_pendings(account)
+    pendings = get_pendings(account, last_known_pendings)
     if any(last_known_pendings):
         logger.debug(f'No known pending transactions for {account}')
         new_pendings = find_new_pending_trans(pendings, last_known_pendings)
