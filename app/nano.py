@@ -31,14 +31,14 @@ def get_trans_history(account, count):
         return []
 
 
-def get_pendings(account, last_known_pendings):
+def get_pendings(account, last_known_pendings=None):
     req = dict(account=account, **pending_data)
     try:
         pending = requests.post(f'http://{HOST}:7076', json.dumps(req)).json()
         return pending['blocks'] if pending.get('blocks') else {}
     except RequestException as e:
         logger.exception('Failed to get transaction history: ', str(e))
-        return last_known_pendings
+        return last_known_pendings or {}
 
 
 def notify(emails, message, subject, from_email):

@@ -248,6 +248,31 @@ class TestNano(unittest.TestCase):
         assert newest_transactions == last_known_pending['blocks']
 
     @requests_mock.mock()
+    def test_find_new_pending_transactions_none_prior_pending(self, mock_request):
+        # Given
+        last_known_pending = {
+            "blocks": {
+                "pending_1": {
+                    "amount": "10000000000000000000000000000000000",
+                    "source": "nano_account"
+                }
+            }
+        }
+        mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(last_known_pending))
+
+        # When
+        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
+
+            # Then
+            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB from nano_account',
+                                              AllStringsIn(['nano_account', '10000.00000</a>XRB']),
+                                              'pending@nanotify.co')
+
+        # Then
+        assert newest_transactions == last_known_pending['blocks']
+
+    @requests_mock.mock()
     def test_email_not_sent_when_none_pending(self, mock_request):
         # Given
         last_known_pending = {
@@ -284,7 +309,7 @@ class TestNano(unittest.TestCase):
 
         # When
         with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
-            newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
+            check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 
             # Then
