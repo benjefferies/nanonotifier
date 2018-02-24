@@ -29,7 +29,7 @@ if __name__ == '__main__':
         for account in subToEmails.keys():
             logger.info(f'Checking for new transactions for {account}')
             emails = subToEmails[account]
-            https = subToEmails[http]
+            https = subToHttps[account]
             account_last_known_trans = last_known_trans[account]
             last_known_trans[account] = check_account_for_new_transactions(account, account_last_known_trans, emails, https)
             last_known_pending[account] = check_account_for_new_pending(account, last_known_pending[account], emails, https)
