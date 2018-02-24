@@ -52,7 +52,7 @@ def notify(emails, message, subject, from_email):
         logger.info(message)
 
 def http_notify(https, account, amount, complete):
-    if EMAIL_ENABLED:
+    if HTTP_ENABLED:
         payload = {'account': account, 'amount': amount, 'complete': complete
         for http in https:
             r = request.get(http, params = payload)
