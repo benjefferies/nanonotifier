@@ -2,6 +2,7 @@ import os
 
 HOST = os.getenv('RAIBLOCKS_HOST', '[::1]')
 EMAIL_ENABLED = os.getenv('EMAIL_ENABLED', 'False') == 'True'
+HTTP_ENABLED = os.getenv('HTTP_ENABLED', 'False') == 'True'
 AWS_REGION = os.getenv('AWS_REGION', 'us-west-2')
 TIMEOUT = int(os.getenv('TIMEOUT', 60))
 DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///test.db')
