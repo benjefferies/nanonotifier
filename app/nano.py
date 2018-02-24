@@ -52,8 +52,11 @@ def notify(emails, message, subject, from_email):
         logger.info(message)
 
 def http_notify(https, account, amount, complete):
-    if https:
-        # code to execute HTTP request
+    if EMAIL_ENABLED:
+        payload = {'account': account, 'amount': amount, 'complete': complete
+        for http in https:
+            r = request.get(http, params = payload)
+            logger.debug(f'Sent http request to {http}')
 
 def find_new_pending_trans(all_pending, last_known_pending):
     new_pending = {}
@@ -93,7 +96,7 @@ def check_account_for_new_transactions(account, last_known_trans, emails, https)
     if total:
         subject = 'Received {total:1.5f} XRB from {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='received@nanotify.co')
-        http_notify(https, account, total, true)
+        http_notify(https, account, total, 1)
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
@@ -112,7 +115,7 @@ def check_account_for_new_pending(account, last_known_pendings, emails, https):
     if total:
         subject = 'Pending {total:1.5f} XRB from {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='pending@nanotify.co')
-        http_notify(https, account, total, false)
+        http_notify(https, account, total, 0)
     return pendings
 
 
