@@ -51,8 +51,8 @@ def notify(emails, message, subject, from_email):
         logger.info(subject)
         logger.info(message)
 
-def http_notify(http, account, amount, complete):
-    if http:
+def http_notify(https, account, amount, complete):
+    if https:
         # code to execute HTTP request
 
 def find_new_pending_trans(all_pending, last_known_pending):
@@ -79,7 +79,7 @@ def find_newest_trans(account, last_known_trans, count=10):
     return find_newest_trans(account, last_known_trans, count=count+10)
 
 
-def check_account_for_new_transactions(account, last_known_trans, emails):
+def check_account_for_new_transactions(account, last_known_trans, emails, https):
     logger.info(f'Finding new transactions for {account}')
     # Get last transaction if none
     if not last_known_trans:
@@ -93,11 +93,11 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
     if total:
         subject = 'Received {total:1.5f} XRB from {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='received@nanotify.co')
-        http_notify(http, account, total, true)
+        http_notify(https, account, total, true)
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
-def check_account_for_new_pending(account, last_known_pendings, emails):
+def check_account_for_new_pending(account, last_known_pendings, emails, https):
     logger.info(f'Finding pending transactions for {account}')
     # Get last transaction if none
     pendings = get_pendings(account, last_known_pendings)
@@ -112,7 +112,7 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
     if total:
         subject = 'Pending {total:1.5f} XRB from {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='pending@nanotify.co')
-        http_notify(http, account, total, false)
+        http_notify(https, account, total, false)
     return pendings
 
 
