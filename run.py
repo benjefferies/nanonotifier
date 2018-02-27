@@ -18,16 +18,20 @@ if __name__ == '__main__':
         last_known_pending[subscription.account] = get_pendings(subscription.account)
     while True:
         subToEmails = defaultdict(list)
+        subToWebhooks = defaultdict(list)
         logger.info('Loading email subscriptions')
 
-        # Map account to emails
+        # Map account to emails and HTTP addresses
         for subscription in session.query(Subscription):
             subToEmails[subscription.account].append(subscription.email)
+            if subscription.webhook:
+                subToWebhooks[subscription.account].append(subscription.webhook)
 
         for account in subToEmails.keys():
             logger.info(f'Checking for new transactions for {account}')
             emails = subToEmails[account]
+            webhooks = subToWebhooks[account]
             account_last_known_trans = last_known_trans[account]
-            last_known_trans[account] = check_account_for_new_transactions(account, account_last_known_trans, emails)
-            last_known_pending[account] = check_account_for_new_pending(account, last_known_pending[account], emails)
+            last_known_trans[account] = check_account_for_new_transactions(account, account_last_known_trans, emails, webhooks)
+            last_known_pending[account] = check_account_for_new_pending(account, last_known_pending[account], emails, webhooks)
         time.sleep(TIMEOUT)

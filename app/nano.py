@@ -8,7 +8,7 @@ from collections import defaultdict
 
 from requests import RequestException
 
-from app.config import HOST, EMAIL_ENABLED
+from app.config import HOST, EMAIL_ENABLED, WEBHOOK_ENABLED, WEBHOOK_TIMEOUT
 from app.ses import send
 
 logger = logging.getLogger(__name__)
@@ -52,6 +52,18 @@ def notify(emails, message, subject, from_email):
         logger.info(message)
 
 
+def webhook_notify(webhooks, subject, account, amount, transaction_type):
+    if WEBHOOK_ENABLED:
+        payload = {'account': account, 'amount': amount, 'type': transaction_type, 'text': subject}
+        for webhook in webhooks:
+            try:
+                r = requests.post(webhook, data=json.dumps(payload), timeout=WEBHOOK_TIMEOUT)
+                logger.debug(f'{webhook} returned status code {r.status_code}')
+            except RequestException:
+                logger.exception('Failed to trigger webhook')
+            logger.debug(f'Sent http request to {webhook}')
+
+
 def find_new_pending_trans(all_pending, last_known_pending):
     new_pending = {}
     for tran_hash in all_pending.keys():
@@ -76,7 +88,7 @@ def find_newest_trans(account, last_known_trans, count=10):
     return find_newest_trans(account, last_known_trans, count=count+10)
 
 
-def check_account_for_new_transactions(account, last_known_trans, emails):
+def check_account_for_new_transactions(account, last_known_trans, emails, webhooks=None):
     logger.info(f'Finding new transactions for {account}')
     # Get last transaction if none
     if not last_known_trans:
@@ -88,12 +100,13 @@ def check_account_for_new_transactions(account, last_known_trans, emails):
     logger.debug(f'Found new transactions {json.dumps(new_trans, indent=4, sort_keys=True)}')
     message, total = build_message_and_total_for_new_transactions(account, new_trans)
     if total:
-        subject = 'Received {total:1.5f} XRB from {account}'.format(total=total, account=account)
+        subject = 'Received {total:1.5f} XRB at {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='received@nanotify.co')
+        webhook_notify(webhooks, subject, account, total, transaction_type='received')
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
-def check_account_for_new_pending(account, last_known_pendings, emails):
+def check_account_for_new_pending(account, last_known_pendings, emails, webhooks=None):
     logger.info(f'Finding pending transactions for {account}')
     # Get last transaction if none
     pendings = get_pendings(account, last_known_pendings)
@@ -106,8 +119,9 @@ def check_account_for_new_pending(account, last_known_pendings, emails):
     logger.debug(f'No known pending transactions for {account}')
     message, total = build_message_and_total_for_pending_transactions(account, new_pendings)
     if total:
-        subject = 'Pending {total:1.5f} XRB from {account}'.format(total=total, account=account)
+        subject = 'Pending {total:1.5f} XRB at {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='pending@nanotify.co')
+        webhook_notify(webhooks, subject, account, total, transaction_type='pending')
     return pendings
 
 
@@ -127,7 +141,8 @@ def build_message_and_total_for_new_transactions(account, new_trans):
             number_of_transactions += 1
             account_transactions[from_account].append({'amount': amount, 'hash': hash})
     if total:
-        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account, 'total': total, 'number_of_transactions': number_of_transactions})
+        message = render('templates/transactions_email.html', {'transactions': account_transactions, 'account': account,
+                                                               'total': total, 'number_of_transactions': number_of_transactions})
     return message, total
 
 
@@ -145,7 +160,8 @@ def build_message_and_total_for_pending_transactions(account, pendings):
         number_of_transactions += 1
         account_pendings[from_account].append({'amount': amount, 'hash': hash})
     if total:
-        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account, 'total': total, 'number_of_transactions': number_of_transactions})
+        message = render('templates/pendings_email.html', {'transactions': account_pendings, 'account': account,
+                                                           'total': total, 'number_of_transactions': number_of_transactions})
     return message, total
 
 

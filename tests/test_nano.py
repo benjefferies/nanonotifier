@@ -51,10 +51,31 @@ class TestNano(unittest.TestCase):
                                                                     ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Received 0.00990 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Received 0.00990 XRB at nano_account',
                                               AllStringsIn(['nano_account', '0.00990</a>XRB']),
                                               'received@nanotify.co')
         assert newest_transaction['hash'] == latest_transaction
+
+    @requests_mock.mock()
+    def test_find_new_transaction_webhook(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        last_known_transaction = ten_transactions['history'].pop(1)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(eleven_transactions))
+        mock_request.post('http://localhost/webhook')
+
+        # When
+        with patch('app.nano.WEBHOOK_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False):
+            check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
+                                                                    ['test@example.com'], ['http://localhost/webhook'])
+
+        payload = json.loads(mock_request.request_history[1].text)
+        assert payload['text'] == 'Received 0.00990 XRB at nano_account'
+        assert payload['type'] == 'received'
+        assert payload['account'] == 'nano_account'
+        assert payload['amount'] == 0.00990
 
     @requests_mock.mock()
     def test_find_new_transactions(self, mock_request):
@@ -71,7 +92,7 @@ class TestNano(unittest.TestCase):
                                                                     ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Received 0.06422 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Received 0.06422 XRB at nano_account',
                                               AllStringsIn(['nano_account', '0.00990</a>XRB', '0.05432</a>XRB']),
                                               'received@nanotify.co')
 
@@ -157,8 +178,6 @@ class TestNano(unittest.TestCase):
             mock_send.assert_not_called()
         assert last_known_transaction['hash'] == latest_transaction
 
-
-
     @requests_mock.mock()
     def test_find_new_pending_transaction(self, mock_request):
         # Given
@@ -183,10 +202,40 @@ class TestNano(unittest.TestCase):
                                                                 ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 20000.00000 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Pending 20000.00000 XRB at nano_account',
                                               AllStringsIn(['nano_account', '20000.00000</a>XRB']),
                                               'pending@nanotify.co')
         assert newest_transactions == new_pendings['blocks']
+
+    @requests_mock.mock()
+    def test_find_new_pending_webhook(self, mock_request):
+        # Given
+        last_known_pending = {
+            "blocks": {
+                "pending_1": {
+                    "amount": "10000000000000000000000000000000000",
+                    "source": "nano_account"
+                }
+            }
+        }
+        new_pendings = copy.deepcopy(last_known_pending)
+        new_pendings['blocks']['pending_2'] = {
+            "amount": "20000000000000000000000000000000000",
+            "source": "nano_account"
+        }
+        mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(new_pendings))
+        mock_request.post('http://localhost/webhook')
+
+        # When
+        with patch('app.nano.WEBHOOK_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False):
+            check_account_for_new_pending('nano_account', last_known_pending['blocks'],
+                                                                ['test@example.com'], ['http://localhost/webhook'])
+
+        payload = json.loads(mock_request.request_history[1].text)
+        assert payload['text'] == 'Pending 20000.00000 XRB at nano_account'
+        assert payload['type'] == 'pending'
+        assert payload['account'] == 'nano_account'
+        assert payload['amount'] == 20000
 
     @requests_mock.mock()
     def test_find_new_pending_transactions(self, mock_request):
@@ -216,7 +265,7 @@ class TestNano(unittest.TestCase):
                                                                 ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 50000.00000 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Pending 50000.00000 XRB at nano_account',
                                               AllStringsIn(
                                                   ['nano_account', '20000.00000</a>XRB', '30000.00000</a>XRB']),
                                               'pending@nanotify.co')
@@ -240,7 +289,7 @@ class TestNano(unittest.TestCase):
             newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB at nano_account',
                                               AllStringsIn(['nano_account', '10000.00000</a>XRB']),
                                               'pending@nanotify.co')
 
@@ -265,7 +314,7 @@ class TestNano(unittest.TestCase):
             newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
 
             # Then
-            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB from nano_account',
+            mock_send.assert_called_once_with('test@example.com', 'Pending 10000.00000 XRB at nano_account',
                                               AllStringsIn(['nano_account', '10000.00000</a>XRB']),
                                               'pending@nanotify.co')
 
