@@ -68,7 +68,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://localhost/webhook')
 
         # When
-        with patch('app.nano.WEBHOOK_ENABLED', True):
+        with patch('app.nano.WEBHOOK_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False):
             check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'], ['http://localhost/webhook'])
 
@@ -90,7 +90,8 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://localhost/webhook')
 
         # When
-        with patch('app.nano.FCM_ENABLED', True),  patch('app.nano.fcm.send') as mock_send:
+        with patch('app.nano.FCM_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False),\
+                patch('app.nano.fcm.send') as mock_send:
             check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'], ['http://localhost/webhook'])
 
@@ -247,7 +248,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://localhost/webhook')
 
         # When
-        with patch('app.nano.WEBHOOK_ENABLED', True):
+        with patch('app.nano.WEBHOOK_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False):
             check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'], ['http://localhost/webhook'])
 
@@ -277,7 +278,8 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://localhost/webhook')
 
         # When
-        with patch('app.nano.FCM_ENABLED', True),  patch('app.nano.fcm.send') as mock_send:
+        with patch('app.nano.FCM_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False),\
+                patch('app.nano.fcm.send') as mock_send:
             check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'], ['http://localhost/webhook'])
 
