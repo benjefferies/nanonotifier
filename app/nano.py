@@ -1,15 +1,14 @@
 import json
 import logging
 import os
+from collections import defaultdict
 
 import jinja2
 import requests
-from collections import defaultdict
-
 from requests import RequestException
 
-from app.config import HOST, EMAIL_ENABLED, WEBHOOK_ENABLED, WEBHOOK_TIMEOUT
-from app.ses import send
+from app import ses, fcm
+from app.config import HOST, EMAIL_ENABLED, WEBHOOK_ENABLED, WEBHOOK_TIMEOUT, FCM_ENABLED
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +45,7 @@ def notify(emails, message, subject, from_email):
         logger.debug(f'Sending emails to {str(emails)}')
         logger.debug(f'{subject}\n\n{message}')
         for email in emails:
-            send(email, subject, message, from_email)
+            ses.send(email, subject, message, from_email)
     else:
         logger.info(subject)
         logger.info(message)
@@ -62,6 +61,12 @@ def webhook_notify(webhooks, subject, account, amount, transaction_type):
             except RequestException:
                 logger.exception('Failed to trigger webhook')
             logger.debug(f'Sent http request to {webhook}')
+
+
+def queue_notify(subject, account):
+    if FCM_ENABLED:
+        logger.debug(f'Sending sns message for {account}')
+        fcm.send(account, subject)
 
 
 def find_new_pending_trans(all_pending, last_known_pending):
@@ -103,6 +108,7 @@ def check_account_for_new_transactions(account, last_known_trans, emails, webhoo
         subject = 'Received {total:1.5f} XRB at {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='received@nanotify.co')
         webhook_notify(webhooks, subject, account, total, transaction_type='received')
+        queue_notify(subject, account)
     return last_known_trans if not new_trans else new_trans[0].get('hash')
 
 
@@ -122,6 +128,7 @@ def check_account_for_new_pending(account, last_known_pendings, emails, webhooks
         subject = 'Pending {total:1.5f} XRB at {account}'.format(total=total, account=account)
         notify(emails, message, subject, from_email='pending@nanotify.co')
         webhook_notify(webhooks, subject, account, total, transaction_type='pending')
+        queue_notify(subject, account)
     return pendings
 
 

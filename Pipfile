@@ -16,6 +16,7 @@ requests = "*"
 "boto3" = "*"
 sqlalchemy = "*"
 "jinja2" = "*"
+pyfcm = "*"
 
 
 [dev-packages]
