@@ -1,5 +1,6 @@
 import logging
 
+# Create a new SES resource and specify a region.
 from pyfcm import FCMNotification
 
 from app.config import FCM_API_KEY

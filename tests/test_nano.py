@@ -19,6 +19,7 @@ def match_pending(request):
 
 
 class TestNano(unittest.TestCase):
+
     @requests_mock.mock()
     def test_find_eleventh_new_transactions(self, mock_request):
         # Given
