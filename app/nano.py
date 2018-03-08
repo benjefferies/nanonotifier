@@ -45,7 +45,8 @@ def notify(emails, message, subject, from_email):
         logger.debug(f'Sending emails to {str(emails)}')
         logger.debug(f'{subject}\n\n{message}')
         for email in emails:
-            ses.send(email, subject, message, from_email)
+            if email:
+                ses.send(email, subject, message, from_email)
     else:
         logger.info(subject)
         logger.info(message)
