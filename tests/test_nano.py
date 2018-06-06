@@ -19,6 +19,7 @@ def match_pending(request):
 
 
 class TestNano(unittest.TestCase):
+
     @requests_mock.mock()
     def test_find_eleventh_new_transactions(self, mock_request):
         # Given
@@ -46,7 +47,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(eleven_transactions))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'])
 
@@ -71,11 +72,31 @@ class TestNano(unittest.TestCase):
             check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'], ['http://localhost/webhook'])
 
+        # Then
         payload = json.loads(mock_request.request_history[1].text)
         assert payload['text'] == 'Received 0.00990 XRB at nano_account'
         assert payload['type'] == 'received'
         assert payload['account'] == 'nano_account'
         assert payload['amount'] == 0.00990
+
+    @requests_mock.mock()
+    def test_find_new_transaction_fcm_notification(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        last_known_transaction = ten_transactions['history'].pop(1)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(eleven_transactions))
+        mock_request.post('http://localhost/webhook')
+
+        # When
+        with patch('app.nano.FCM_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False),\
+                patch('app.nano.fcm.send') as mock_send:
+            check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
+                                                                    ['test@example.com'], ['http://localhost/webhook'])
+
+        # Then
+            mock_send.assert_called_once_with('nano_account', 'Received 0.00990 XRB at nano_account')
 
     @requests_mock.mock()
     def test_find_new_transactions(self, mock_request):
@@ -87,7 +108,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(eleven_transactions))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'])
 
@@ -110,7 +131,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_count(20), exc=ConnectTimeout)
 
         # When
-        with patch('app.nano.send'), patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send'), patch('app.nano.EMAIL_ENABLED', True):
             latest_transaction = check_account_for_new_transactions('nano_account', 'cant_get_to_this_id',
                                                                     ['test@example.com'])
 
@@ -128,7 +149,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_count(20), exc=ConnectTimeout)
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             check_account_for_new_transactions('nano_account', 'cant_get_to_this_id',
                                                                     ['test@example.com'])
 
@@ -170,7 +191,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), exc=ConnectTimeout)
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
                                                                     ['test@example.com'])
 
@@ -197,7 +218,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(new_pendings))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 
@@ -238,6 +259,34 @@ class TestNano(unittest.TestCase):
         assert payload['amount'] == 20000
 
     @requests_mock.mock()
+    def test_find_new_pending_fcm_notification(self, mock_request):
+        # Given
+        last_known_pending = {
+            "blocks": {
+                "pending_1": {
+                    "amount": "10000000000000000000000000000000000",
+                    "source": "nano_account"
+                }
+            }
+        }
+        new_pendings = copy.deepcopy(last_known_pending)
+        new_pendings['blocks']['pending_2'] = {
+            "amount": "20000000000000000000000000000000000",
+            "source": "nano_account"
+        }
+        mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(new_pendings))
+        mock_request.post('http://localhost/webhook')
+
+        # When
+        with patch('app.nano.FCM_ENABLED', True), patch('app.nano.EMAIL_ENABLED', False),\
+                patch('app.nano.fcm.send') as mock_send:
+            check_account_for_new_pending('nano_account', last_known_pending['blocks'],
+                                                                ['test@example.com'], ['http://localhost/webhook'])
+
+        # Then
+            mock_send.assert_called_once_with('nano_account', 'Pending 20000.00000 XRB at nano_account')
+
+    @requests_mock.mock()
     def test_find_new_pending_transactions(self, mock_request):
         # Given
         last_known_pending = {
@@ -260,7 +309,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(new_pendings))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 
@@ -285,7 +334,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(last_known_pending))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
 
             # Then
@@ -310,7 +359,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(last_known_pending))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', {}, ['test@example.com'])
 
             # Then
@@ -335,7 +384,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, text=json.dumps(last_known_pending))
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 
@@ -357,7 +406,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, exc=ConnectTimeout)
 
         # When
-        with patch('app.nano.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
             check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 
@@ -378,7 +427,7 @@ class TestNano(unittest.TestCase):
         mock_request.post('http://[::1]:7076', additional_matcher=match_pending, exc=ConnectTimeout)
 
         # When
-        with patch('app.nano.send'), patch('app.nano.EMAIL_ENABLED', True):
+        with patch('app.nano.ses.send'), patch('app.nano.EMAIL_ENABLED', True):
             newest_transactions = check_account_for_new_pending('nano_account', last_known_pending['blocks'],
                                                                 ['test@example.com'])
 

@@ -6,13 +6,12 @@ from botocore.exceptions import ClientError
 # Create a new SES resource and specify a region.
 from app.config import AWS_REGION
 
-client = boto3.client('ses', region_name=AWS_REGION)
-
 
 logger = logging.getLogger(__name__)
 
 
 def send(email_user, subject, message, from_email):
+    client = boto3.client('ses', region_name=AWS_REGION)
     logger.info(f'Sending email to {email_user} with subject {subject}')
     # Try to send the email.
     try:
@@ -39,7 +38,7 @@ def send(email_user, subject, message, from_email):
         )
     # Display an error if something goes wrong.
     except ClientError as e:
-        print(e.response['Error']['Message'])
+        logger.exception(e.response['Error']['Message'])
     else:
-        print("Email sent! Message ID:"),
-        print(response['ResponseMetadata']['RequestId'])
+        logger.debug("Email sent! Message ID:"),
+        logger.debug(response['ResponseMetadata']['RequestId'])
