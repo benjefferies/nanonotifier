@@ -58,6 +58,25 @@ class TestNano(unittest.TestCase):
         assert newest_transaction['hash'] == latest_transaction
 
     @requests_mock.mock()
+    def test_find_new_transaction_no_email(self, mock_request):
+        # Given
+        with open('tests/11_transactions.json') as file:
+            eleven_transactions = json.load(file)
+        ten_transactions = copy.deepcopy(eleven_transactions)
+        last_known_transaction = ten_transactions['history'].pop(1)
+        newest_transaction = ten_transactions['history'].pop(0)
+        mock_request.post('http://[::1]:7076', additional_matcher=match_count(10), text=json.dumps(eleven_transactions))
+
+        # When
+        with patch('app.nano.ses.send') as mock_send, patch('app.nano.EMAIL_ENABLED', True):
+            latest_transaction = check_account_for_new_transactions('nano_account', last_known_transaction['hash'],
+                                                                    [None])
+
+            # Then
+            mock_send.assert_not_called()
+        assert newest_transaction['hash'] == latest_transaction
+
+    @requests_mock.mock()
     def test_find_new_transaction_webhook(self, mock_request):
         # Given
         with open('tests/11_transactions.json') as file:
